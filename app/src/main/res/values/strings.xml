@@ -1,0 +1,23 @@
+<resources>
+
+    <string name="app_name">Punk</string>
+
+    <string name="search">Search</string>
+    <string name="no_beers">There are no beers to show</string>
+
+    <string name="beer">Beer</string>
+    <string name="box">Box</string>
+
+    <string name="offers_label1">Weekend Offers</string>
+    <string name="offers_label2">Free shipping on orders over 60\u20AC</string>
+
+    <string name="more_info">MORE INFO</string>
+
+    <string name="ingredients">Ingredients</string>
+    <string name="tips">Brewers Tips:</string>
+    <string name="first_brewed">First Brewed:</string>
+
+    <string name="malt">Malt</string>
+    <string name="hops">Hops</string>
+
+</resources>

@@ -1,0 +1,28 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <item name="windowActionBar">false</item>
+
+        <item name="android:textColorHint">@color/white</item>      // change hint color of SearchView
+        <item name="android:textColorPrimary">@color/white</item>   //  change text that user inputs in SearchView
+        <item name="android:textColorSecondary">@color/white</item> //  change small search icon before the hint
+
+    </style>
+
+
+    <style name="ToolbarTheme" parent="@style/ThemeOverlay.AppCompat.ActionBar">
+
+        <item name="colorControlNormal">@color/white</item>
+        <item name="android:background">@color/colorPrimaryDark</item>
+        <item name="android:textColorPrimary">@color/white</item>
+
+    </style>
+
+
+</resources>
