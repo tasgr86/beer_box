@@ -1,6 +1,12 @@
 package grigoris.anastasios.punk.Model
 
-data class TheBeer(
+import android.os.Parcelable
+import kotlinx.android.parcel.IgnoredOnParcel
+import kotlinx.android.parcel.Parcelize
+import kotlinx.android.parcel.RawValue
+
+@Parcelize
+data class TheBeer (
 
     val abv: Double,
     val attenuation_level: Double,
@@ -24,57 +30,34 @@ data class TheBeer(
     val target_og: Double,
     val volume: Volume
 
-)
+): Parcelable
 
-data class BoilVolume(
-    val unit: String,
-    val value: Int
-)
+@Parcelize
+data class BoilVolume(val unit: String, val value: Int) : Parcelable
 
-data class Ingredients(
-    val hops: List<Hop>,
-    val malt: List<Malt>,
-    val yeast: String
-)
+@Parcelize
+data class Ingredients(val hops: List<Hop>, val malt: List<Malt>, val yeast: String) : Parcelable
 
-data class Hop(
-    val add: String,
-    val amount: Amount,
-    val attribute: String,
-    val name: String
-)
+@Parcelize
+data class Hop(val add: String, val amount: Amount, val attribute: String, val name: String) : Parcelable
 
-data class Amount(
-    val unit: String,
-    val value: Double
-)
+@Parcelize
+data class Amount(val unit: String, val value: Double) : Parcelable
 
-data class Malt(
-    val amount: Amount,
-    val name: String
-)
+@Parcelize
+data class Malt(val amount: Amount, val name: String) : Parcelable
 
-data class Volume(
-    val unit: String,
-    val value: Int
-)
+@Parcelize
+data class Volume(val unit: String, val value: Int) : Parcelable
 
-data class Method(
-    val fermentation: Fermentation,
-    val mash_temp: List<MashTemp>,
-    val twist: Any
-)
+@Parcelize
+data class Method(val fermentation: Fermentation, val mash_temp: List<MashTemp>,  var twist: @RawValue Any? = null) : Parcelable
 
-data class Fermentation(
-    val temp: Temp
-)
+@Parcelize
+data class Fermentation(val temp: Temp) : Parcelable
 
-data class Temp(
-    val unit: String,
-    val value: Int
-)
+@Parcelize
+data class Temp(val unit: String, val value: Int) : Parcelable
 
-data class MashTemp(
-    val duration: Int,
-    val temp: Temp
-)
+@Parcelize
+data class MashTemp(val duration: Int, val temp: Temp) : Parcelable

@@ -10,56 +10,88 @@ import android.view.View
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.DrawableImageViewTarget
 import com.squareup.picasso.Picasso
+import grigoris.anastasios.punk.*
 import grigoris.anastasios.punk.Adapters.IngredientsAdapter
 import grigoris.anastasios.punk.Model.TheBeer
-import grigoris.anastasios.punk.R
-import grigoris.anastasios.punk.RetrofitRepo
 import kotlinx.android.synthetic.main.show_beer.*
+import javax.inject.Inject
 
 class ShowBeer : AppCompatActivity(){
 
     private lateinit var theBeer        : TheBeer
     private var startLoading            = 0L
+    @Inject lateinit var retrofitRepo   : IRetrofitRepo
+    @Inject lateinit var dialogs        : IMyDialogs
+    private var beerID                  = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.show_beer)
 
+        MyApplication.getComponent().injectShowRecipe(this@ShowBeer)
+
         startLoading = System.currentTimeMillis()
         showLoadingState()
 
-        show_beer_toolbar.title = ""
+        show_beer_toolbar.title = getString(R.string.app_name)
         setSupportActionBar(show_beer_toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
-        val beerID = intent.getIntExtra("beer_id", 0)
+        beerID = intent.getIntExtra("beer_id", 0)
 
-        RetrofitRepo().showBeer(beerID)
-            .observe(this, Observer<ArrayList<TheBeer>>{
+        if (savedInstanceState?.getParcelable<TheBeer>("beer") != null)
+            theBeer = savedInstanceState.getParcelable("beer")
 
-                val diff = System.currentTimeMillis() - startLoading
+        if (!::theBeer.isInitialized)
+            getBeer()
+        else
+            setUpViews()
 
-                if (diff < 1000){
-
-                    Handler().postDelayed({
-
-                        theBeer = it!![0]
-                        setUpViews()
-
-                    }, 1300 - diff)
+    }
 
 
-                }else{
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
 
-                    theBeer = it!![0]
-                    setUpViews()
+        outState?.putParcelable("beer", theBeer)
 
-                }
+    }
+
+
+    private fun getBeer(){
+
+        retrofitRepo.showBear(beerID).observe(this, Observer<ArrayList<TheBeer>>{
+
+            val diff = System.currentTimeMillis() - startLoading
+
+            if (diff < 1000){
+
+                Handler().postDelayed({ onBeerFetched(it) }, 1000 - diff)
+
+            }else{
+
+                onBeerFetched(it)
+
+            }
 
         })
 
     }
+
+    private fun onBeerFetched(beer : ArrayList<TheBeer>?){
+
+        if (beer == null)
+            dialogs.showMessage(this, getString(R.string.beer_unavailable))
+
+        else{
+
+            theBeer = beer[0]
+            setUpViews()
+
+        }
+    }
+
 
     private fun showLoadingState(){
 

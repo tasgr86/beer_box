@@ -15,21 +15,29 @@ import android.view.ViewGroup
 import kotlinx.android.synthetic.main.main_fragment.*
 import android.support.v7.widget.RecyclerView
 import android.widget.SearchView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.DrawableImageViewTarget
 import com.squareup.picasso.Picasso
+import grigoris.anastasios.punk.*
 import grigoris.anastasios.punk.Adapters.BeersAdapter
 import grigoris.anastasios.punk.Model.TheBeer
-import grigoris.anastasios.punk.R
-import grigoris.anastasios.punk.RetrofitRepo
 import kotlinx.android.synthetic.main.beer_sheet.*
+import javax.inject.Inject
 
 class BeerFragment : Fragment() {
 
     private lateinit var adapter        : BeersAdapter
     private lateinit var sheet          : BottomSheetBehavior<ConstraintLayout>
-    private lateinit var repo           : RetrofitRepo
+    @Inject lateinit var repo           : IRetrofitRepo
+    @Inject lateinit var dialogs           : IMyDialogs
     private var startLoading            = 0L
+    private lateinit var beers          : ArrayList<TheBeer>
+
+    companion object {
+
+        // Type becomes 0 when downloading more pages with beers and 1 when searching beers by name
+
+        var type = 0
+
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
@@ -37,20 +45,17 @@ class BeerFragment : Fragment() {
 
     }
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        startLoading = System.currentTimeMillis()
+        MyApplication.getComponent().injectBeerFragment(this@BeerFragment)
 
-        showLoadingState()
+        beers = arguments!!.getParcelableArrayList<TheBeer>("beers")!!
 
         sheet = BottomSheetBehavior.from(beer_sheet)
         sheet.isHideable = true
 
-        repo = RetrofitRepo()
-        getBeers()
-
+        loadAdapter(beers)
         setUpSearchWidget()
 
     }
@@ -67,7 +72,7 @@ class BeerFragment : Fragment() {
             no_beers.visibility = View.GONE
 
             val lm = LinearLayoutManager(requireContext())
-            adapter = BeersAdapter(requireContext(), beers, lm, rv, this)
+            adapter = BeersAdapter(requireContext(), beers, lm, rv, this, repo, dialogs)
             rv.layoutManager = lm
             rv.adapter = adapter
 
@@ -111,21 +116,6 @@ class BeerFragment : Fragment() {
 
     }
 
-    private fun showLoadingState(){
-
-        Glide.with(context!!).load(R.drawable.loading).into(DrawableImageViewTarget(main_fragment_loading))
-        main_fragment_loading.visibility = View.VISIBLE
-        main_fragment_content.visibility = View.GONE
-
-    }
-
-    private fun showLoadedState(){
-
-        main_fragment_loading.visibility = View.GONE
-        main_fragment_content.visibility = View.VISIBLE
-
-    }
-
 
     private fun setUpSearchWidget() {
 
@@ -140,16 +130,21 @@ class BeerFragment : Fragment() {
 
             override fun onQueryTextChange(query: String): Boolean {
 
+                adapter.resetNextPage()
+
                 if (!query.isEmpty()) {
 
-                    repo.searchBeers(query).observe(this@BeerFragment, Observer<ArrayList<TheBeer>>{
+                    type = 1
 
-                        loadAdapter(it)
+                    repo.searchBears(query, 1).observe(this@BeerFragment, Observer<ArrayList<TheBeer>>{
+
+                       onBeersFetched(it)
 
                     })
 
                 } else {
 
+                    type = 0
                     getBeers()
 
                 }
@@ -160,9 +155,23 @@ class BeerFragment : Fragment() {
 
     }
 
+    private fun onBeersFetched(newBeers : ArrayList<TheBeer>?){
+
+        if (newBeers == null)
+            dialogs.showMessage(requireContext(), getString(R.string.beers_unavailable))
+        else{
+
+            beers = newBeers
+            adapter.updateAdapter(beers)
+
+        }
+
+
+    }
+
     private fun getBeers(){
 
-        repo.getBeers(1).observe(this, Observer<ArrayList<TheBeer>>{
+        repo.getBears(1).observe(this, Observer<ArrayList<TheBeer>>{
 
             val diff = System.currentTimeMillis() - startLoading
 
@@ -170,21 +179,15 @@ class BeerFragment : Fragment() {
 
                 Handler().postDelayed({
 
-                    showLoadedState()
-                    loadAdapter(it)
+                    onBeersFetched(it)
 
-
-                }, 1300 - diff)
+                }, 1000 - diff)
 
             }else{
 
-                showLoadedState()
-                loadAdapter(it)
-
+                onBeersFetched(it)
             }
 
         })
-
     }
-
 }

@@ -1,5 +1,6 @@
 package grigoris.anastasios.punk.Adapters
 
+import android.app.Activity
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.Observer
 import android.content.Context;
@@ -10,15 +11,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar
+import android.widget.SearchView
 import com.squareup.picasso.Picasso;
+import grigoris.anastasios.punk.*
 import grigoris.anastasios.punk.Model.TheBeer
-import grigoris.anastasios.punk.R
-import grigoris.anastasios.punk.RetrofitRepo
+import grigoris.anastasios.punk.UI.BeerFragment
 import grigoris.anastasios.punk.UI.ShowBeer
 import kotlinx.android.synthetic.main.beer_row.view.*
 
 class BeersAdapter (_context: Context, _array: ArrayList<TheBeer>, llm: LinearLayoutManager,
-                    val rv : RecyclerView, val lifecycleOwner : LifecycleOwner)
+                    val rv : RecyclerView, val lifecycleOwner : LifecycleOwner, val repo : IRetrofitRepo, val dialogs : IMyDialogs)
                     : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val TYPE_ITEM                           = 0
@@ -28,12 +30,25 @@ class BeersAdapter (_context: Context, _array: ArrayList<TheBeer>, llm: LinearLa
     val context                                     = _context
     var listener : ((TheBeer) -> Unit)?             = null
     var nextPage                                    = 2
+    private var hasMorePages                        = true
 
     init {
 
         rv.addOnScrollListener(MyScroll(llm))
+        hasMorePages()
 
     }
+
+    private fun hasMorePages(){
+
+        // Check whether more beers are available for download
+
+        hasMorePages = array.size % 25 == 0
+
+        MyLog().showLog("SHOULD SCROLL UPDATE", hasMorePages.toString().plus(" ").plus(array.size))
+
+    }
+
 
     override fun onCreateViewHolder(p0: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
 
@@ -48,10 +63,17 @@ class BeersAdapter (_context: Context, _array: ArrayList<TheBeer>, llm: LinearLa
         return array.size + 1
     }
 
+    fun resetNextPage(){
 
-    fun updateView(movies: java.util.ArrayList<TheBeer>) {
+        nextPage = 2
+
+    }
+
+
+    fun updateAdapter(movies: ArrayList<TheBeer>) {
 
         this.array = movies
+        hasMorePages()
         notifyDataSetChanged()
 
     }
@@ -153,29 +175,52 @@ class BeersAdapter (_context: Context, _array: ArrayList<TheBeer>, llm: LinearLa
 
             val lastViewedItem = llm.findLastCompletelyVisibleItemPosition()
 
-            println("CHECK SCROLL ".plus(lastViewedItem == array.size).plus(" ").plus(isLoading))
-
-            if (lastViewedItem == array.size && !isLoading) {
+            if (lastViewedItem == array.size && !isLoading && hasMorePages) {
 
                 val holder = rv.findViewHolderForAdapterPosition(lastViewedItem)
                 val pBar = (holder as LoadingViewHolder).progressBar
 
                 startLoading(pBar)
-                RetrofitRepo().getBeers(nextPage).observe(lifecycleOwner, Observer<ArrayList<TheBeer>>{
 
-                    if (it != null) {
+                if (BeerFragment.type == 0) {
 
-                        array.addAll(it)
-                        updateView(array)
-                        finishLoading(pBar)
-                        nextPage++
+                    repo.getBears(nextPage).observe(lifecycleOwner, Observer<ArrayList<TheBeer>> {
 
-                    }
+                        updateOnScrollFinish(it, pBar)
 
+                    })
 
-                })
+                }else{
+
+                    val query = ((context as Activity).findViewById(R.id.search_view) as SearchView).query.toString()
+
+                    repo.searchBears(query, nextPage).observe(lifecycleOwner, Observer<ArrayList<TheBeer>>{
+
+                        updateOnScrollFinish(it, pBar)
+
+                    })
+
+                }
 
             }
         }
+
+
+        private fun updateOnScrollFinish(beers : ArrayList<TheBeer>?, pBar : ProgressBar){
+
+            if (beers == null)
+                dialogs.showMessage(context, context.getString(R.string.beers_unavailable))
+
+            else{
+
+                array.addAll(beers)
+                updateAdapter(array)
+                finishLoading(pBar)
+                nextPage++
+
+            }
+
+        }
+
     }
 }

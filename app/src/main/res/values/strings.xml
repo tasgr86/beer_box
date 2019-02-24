@@ -1,6 +1,6 @@
 <resources>
 
-    <string name="app_name">Punk</string>
+    <string name="app_name">Beer Box</string>
 
     <string name="search">Search</string>
     <string name="no_beers">There are no beers to show</string>
@@ -19,5 +19,9 @@
 
     <string name="malt">Malt</string>
     <string name="hops">Hops</string>
+
+    <string name="close">close</string>
+    <string name="beers_unavailable">Oops ... Fetching list of beers has failed. Please try again later</string>
+    <string name="beer_unavailable">Oops ... Fetching beer has failed. Please try again later</string>
 
 </resources>

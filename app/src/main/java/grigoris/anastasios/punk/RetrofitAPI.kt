@@ -10,7 +10,7 @@ interface RetrofitAPI {
     fun getBeers(@Query("page") page : Int): Call<ArrayList<TheBeer>>
 
     @GET("/v2/beers/")
-    fun searchBeer(@Query("beer_name") page : String): Call<ArrayList<TheBeer>>
+    fun searchBeer(@Query("beer_name") name : String, @Query("page") page: Int): Call<ArrayList<TheBeer>>
 
     @GET("/v2/beers/{beerID}")
     fun showBeer(@Path("beerID") beerID : Int): Call<ArrayList<TheBeer>>
